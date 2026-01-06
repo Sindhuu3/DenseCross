@@ -1,25 +1,12 @@
 import streamlit as st
-import tensorflow as tf #app.py
-import numpy as np
-import streamlit as st
-import numpy as np
-from PIL import Image
 import tensorflow as tf
-
-# Safe OpenCV import for Streamlit Cloud
-try:
-    import cv2
-except ImportError:
-    cv2 = None
-    st.warning("⚠️ OpenCV (cv2) not available. Grad-CAM features may be limited.")
-
-import json
+import numpy as np
 from PIL import Image
+import json
 import matplotlib.pyplot as plt
 
 from gradcam import grad_cam, detect_orientation
 from utils import preprocess_image
-
 
 # ---------------- CONFIG ----------------
 IMG_SIZE = (224, 224)
@@ -32,13 +19,13 @@ st.caption("AI-powered DFU severity assessment with Grad-CAM")
 @st.cache_resource
 def load_model():
     model = tf.keras.models.load_model(
-        "dfu_densenet_model.h5",
+        "dfu_densenet_model.h5",  # you can change to .keras later
         compile=False
     )
     with open("class_map.json") as f:
         class_map = json.load(f)
-    inv_map = {v: k for k, v in class_map.items()}
-    return model, inv_map
+
+    return model, class_map
 
 model, class_map = load_model()
 
@@ -47,33 +34,36 @@ uploaded = st.file_uploader(
     "Upload wound image", type=["jpg", "png", "jpeg"]
 )
 
-if uploaded:
+if uploaded is not None:
     image = Image.open(uploaded).convert("RGB")
     st.image(image, caption="Uploaded Image", use_column_width=True)
 
+    # Preprocess
     img_arr = preprocess_image(image, IMG_SIZE)
 
+    # Prediction
     preds = model.predict(img_arr)[0]
-    grade_idx = np.argmax(preds)
+    grade_idx = int(np.argmax(preds))
     grade = grade_idx + 1
     confidence = preds[grade_idx] * 100
 
+    # Grad-CAM
     heatmap = grad_cam(model, img_arr)
     orientation = detect_orientation(heatmap)
 
-    heatmap = cv2.resize(heatmap, IMG_SIZE)
-    heatmap_col = cv2.applyColorMap(
-        np.uint8(255 * heatmap), cv2.COLORMAP_JET
-    )
+    # -------- Heatmap Visualization (NO cv2) --------
+    fig, ax = plt.subplots(figsize=(5, 5))
+    ax.imshow(image.resize(IMG_SIZE))
+    ax.imshow(heatmap, cmap="jet", alpha=0.45)
+    ax.axis("off")
 
-    overlay = heatmap_col * 0.4 + np.array(image.resize(IMG_SIZE))
-
+    # ---------------- RESULTS ----------------
     st.subheader(f"🩺 Predicted Grade: Grade {grade}")
     st.write(f"📊 Confidence: **{confidence:.2f}%**")
     st.write(f"📍 Spread Direction: **{orientation}**")
 
-    st.image(overlay.astype("uint8"), caption="Grad-CAM Explanation")
+    st.pyplot(fig)
 
     st.subheader("🔍 Grade Probabilities")
     for i, p in enumerate(preds):
-        st.write(f"Grade {i+1}: {p*100:.2f}%")
+        st.write(f"Grade {i+1}: {p * 100:.2f}%")
