@@ -1,7 +1,18 @@
 import streamlit as st
 import tensorflow as tf #app.py
 import numpy as np
-import cv2
+import streamlit as st
+import numpy as np
+from PIL import Image
+import tensorflow as tf
+
+# Safe OpenCV import for Streamlit Cloud
+try:
+    import cv2
+except ImportError:
+    cv2 = None
+    st.warning("⚠️ OpenCV (cv2) not available. Grad-CAM features may be limited.")
+
 import json
 from PIL import Image
 import matplotlib.pyplot as plt
