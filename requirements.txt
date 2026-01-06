@@ -4,8 +4,8 @@ tensorflow
 numpy
 scipy
 scikit-learn
+cv2
 
-opencv-python-headless==4.8.1.78
 pillow
 matplotlib
 tqdm
