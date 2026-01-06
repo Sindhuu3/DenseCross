@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 from gradcam import grad_cam, detect_orientation
 from utils import preprocess_image
 
+
 # ---------------- CONFIG ----------------
 IMG_SIZE = (224, 224)
 
