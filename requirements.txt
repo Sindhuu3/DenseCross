@@ -4,7 +4,7 @@ tensorflow
 numpy
 scipy
 scikit-learn
-cv2
+opencv
 
 pillow
 matplotlib
