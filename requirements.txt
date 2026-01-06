@@ -1,0 +1,9 @@
+tensorflow
+streamlit
+numpy
+opencv-python
+pillow
+matplotlib
+scikit-learn
+scipy>=1.9
+tqdm>=4.65
